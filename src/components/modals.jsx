@@ -40,25 +40,25 @@ export function ModalShell({ title, subtitle, onClose, children, footer, width =
 }
 
 export function RiderModal({ event, onClose, onDone }) {
-  const { session, members, setMembers } = useStore();
+  const { session, members, setMembers, addRideSignup } = useStore();
   const isGuest = session.isGuest;
   const memberRec = !isGuest && session.email ? members[session.email] : null;
 
   const [name, setName]     = useState(memberRec?.name  || (!isGuest ? session.name : ''));
   const [phone, setPhone]   = useState(memberRec?.phone || '');
+  const [pickup, setPickup] = useState('');
   const [riders, setRiders] = useState(1);
-  const [driverId, setDriverId] = useState(event.drivers.find((d) => d.seatsTaken < d.seatsTotal)?.id || event.drivers[0].id);
   const [save, setSave]     = useState(!isGuest);
 
   function submit() {
     if (!isGuest && save && session.email) {
       setMembers((m) => ({ ...m, [session.email]: { name, phone, lastSeen: Date.now() } }));
     }
+    addRideSignup({ event, rider: { name, phone, pickup, riders } });
     onDone();
   }
 
-  const valid = name.trim() && phone.trim();
-  const driver = event.drivers.find((d) => d.id === driverId);
+  const valid = name.trim() && phone.trim() && pickup.trim();
 
   return (
     <ModalShell
@@ -70,7 +70,7 @@ export function RiderModal({ event, onClose, onDone }) {
           <div style={{ fontSize: 11.5, color: 'var(--text-3)' }}>
             {isGuest ? 'Sign in to skip this next time.' : save ? 'Your info will be saved to your profile.' : "Your info won't be saved."}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button onClick={onClose} style={btnGhost({})}>Cancel</button>
             <button onClick={submit} disabled={!valid} style={btnPrimary({ disabled: !valid })}>
               <i className="ti ti-check" style={{ fontSize: 14, verticalAlign: -2, marginRight: 5 }} />
@@ -98,35 +98,17 @@ export function RiderModal({ event, onClose, onDone }) {
       <Field label="Phone (so your driver can reach you)">
         <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 123-4567" style={inputStyle()} />
       </Field>
+      <Field label="Pickup location">
+        <input value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="e.g. Dorm lobby, north entrance" style={inputStyle()} />
+      </Field>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
         <Field label="Number of riders">
           <select value={riders} onChange={(e) => setRiders(+e.target.value)} style={inputStyle()}>
             {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n} {n === 1 ? 'person' : 'people'}</option>)}
           </select>
         </Field>
-        <Field label="Preferred driver">
-          <select value={driverId} onChange={(e) => setDriverId(e.target.value)} style={inputStyle()}>
-            {event.drivers.map((d) => {
-              const open = d.seatsTotal - d.seatsTaken;
-              return <option key={d.id} value={d.id} disabled={open === 0}>{d.name} {open === 0 ? '(full)' : `(${open} open)`}</option>;
-            })}
-          </select>
-        </Field>
       </div>
-
-      {driver && (
-        <div style={{
-          marginTop: 4, padding: '10px 12px',
-          background: 'var(--purple-100)',
-          borderRadius: 'var(--r-md)',
-          fontSize: 12, color: 'var(--purple-700)',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <i className="ti ti-car" style={{ fontSize: 15 }} />
-          {driver.name} will pick you up — they&apos;ll get your number after you confirm.
-        </div>
-      )}
 
       {!isGuest && (
         <label style={{

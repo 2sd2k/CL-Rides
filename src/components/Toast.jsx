@@ -8,16 +8,26 @@ export function Toast() {
   if (!toast) return null;
   return (
     <div style={{
-      position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-      background: 'var(--text-1)', color: 'white',
-      padding: '10px 16px', borderRadius: 'var(--r-md)',
+      position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+      background: '#1A1726',
+      color: 'white',
+      padding: '11px 18px', borderRadius: 'var(--r-lg)',
       fontSize: 13, fontWeight: 500,
-      boxShadow: 'var(--shadow-lg)',
+      boxShadow: '0 8px 32px rgba(20,18,38,.35)',
       zIndex: 300,
-      display: 'flex', alignItems: 'center', gap: 8,
-      animation: 'slideUp .2s ease',
+      display: 'flex', alignItems: 'center', gap: 9,
+      animation: 'slideUp .18s ease',
+      letterSpacing: '.1px',
+      whiteSpace: 'nowrap',
     }}>
-      <i className="ti ti-check" style={{ fontSize: 15, color: 'var(--purple-500)' }} />
+      <div style={{
+        width: 20, height: 20, borderRadius: '50%',
+        background: 'rgba(127,119,221,.25)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <i className="ti ti-check" style={{ fontSize: 12, color: 'var(--purple-500)' }} />
+      </div>
       {toast.msg}
     </div>
   );

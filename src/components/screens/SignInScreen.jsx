@@ -1,186 +1,240 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store';
-import { Field, inputStyle, btnPrimary, btnGhost, Bullet, LookupHint, Divider } from '../ui';
+import { EVENTS } from '@/lib/data';
 
 export function SignInScreen() {
-  const { approved, members, signInWithEmail, signInAsGuest } = useStore();
+  const { signInWithEmail, signInAsGuest } = useStore();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalStep, setModalStep] = useState('signin');
   const [email, setEmail] = useState('');
-  const [step, setStep]   = useState('email');
-  const [name, setName]   = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
 
-  function check() {
+  function handleSignIn() {
     const e = email.trim().toLowerCase();
     if (!e || !e.includes('@')) { setError('Enter a valid email'); return; }
     setError('');
-    if (approved[e] || members[e]) {
-      signInWithEmail(e);
-    } else {
-      setStep('name');
-    }
+    signInWithEmail(e);
   }
 
-  const lookup = useMemo(() => {
+  function handleRegister() {
     const e = email.trim().toLowerCase();
-    if (!e) return null;
-    if (approved[e]) return { kind: 'approved', rec: approved[e] };
-    if (members[e])  return { kind: 'member',   rec: members[e] };
-    return { kind: 'new' };
-  }, [email, approved, members]);
+    if (!e || !e.includes('@')) { setError('Enter a valid email'); return; }
+    if (!name.trim()) { setError('Enter your name'); return; }
+    setError('');
+    signInWithEmail(e, name);
+  }
+
+  function openModal(step = 'signin') {
+    setModalStep(step);
+    setEmail('');
+    setPassword('');
+    setName('');
+    setError('');
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+  }
 
   return (
-    <div style={{
-      height: '100vh',
-      display: 'grid',
-      gridTemplateColumns: '1.05fr 1fr',
-      background: 'var(--bg)',
-    }}>
-      <div style={{
-        background: 'linear-gradient(165deg, #26215C 0%, #3C3489 70%, #534AB7 130%)',
-        color: 'white',
-        padding: '56px 64px',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div aria-hidden style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle at 80% 110%, rgba(199,195,240,.25), transparent 55%), radial-gradient(circle at 10% 0%, rgba(127,119,221,.35), transparent 45%)',
-          pointerEvents: 'none',
-        }} />
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
+    <div style={{ background: '#26215C', height: '100vh', overflowY: 'auto', fontFamily: 'var(--font-inter, system-ui, sans-serif)', position: 'relative' }}>
+
+      {/* Navbar */}
+      <nav style={{ height: 66, minHeight: 66, maxHeight: 66, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px 0 40px', borderBottom: '0.5px solid rgba(255,255,255,.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 7, background: 'rgba(255,255,255,.12)', border: '0.5px solid rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <i className="ti ti-car" style={{ color: 'white', fontSize: 14 }} />
+          </div>
+          <span style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>CL Rides</span>
+        </div>
+        <button
+          onClick={() => openModal('signin')}
+          style={{
+            height: 44,
+            padding: '0 18px',
             background: 'rgba(255,255,255,.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: '0.5px solid rgba(255,255,255,.2)',
-          }}>
-            <i className="ti ti-steering-wheel" style={{ fontSize: 20 }} />
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: '-.2px' }}>CL Rides</div>
+            borderRadius: 12,
+            fontSize: 13,
+            fontWeight: 800,
+            color: 'white',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+          }}
+        >
+          <i className="ti ti-user" style={{ fontSize: 14 }} />
+          Log in
+        </button>
+      </nav>
+
+      {/* Hero */}
+      <div style={{ textAlign: 'center', padding: '64px 40px 44px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.1)', border: '0.5px solid rgba(255,255,255,.2)', borderRadius: 20, padding: '5px 14px', fontSize: 11, color: 'rgba(255,255,255,.7)', marginBottom: 22 }}>
+          <i className="ti ti-building-church" style={{ fontSize: 12 }} />
+          Lighthouse Bible Church · College Life
         </div>
-
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', maxWidth: 480 }}>
-          <div style={{ fontSize: 44, fontWeight: 600, letterSpacing: '-.8px', lineHeight: 1.1, marginBottom: 18 }}>
-            Get to where you’re going, together.
-          </div>
-          <div style={{ fontSize: 15, color: 'rgba(255,255,255,.7)', lineHeight: 1.6, marginBottom: 32 }}>
-            Sign in with your email to keep your rides, contact info and history saved across devices. No password — we’ll recognise you next time.
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, color: 'rgba(255,255,255,.85)', fontSize: 13 }}>
-            <Bullet icon="ti-mail" text="Sign in with email — your profile stays saved" />
-            <Bullet icon="ti-user-question" text="No account? Continue as a guest, no commitment" />
-            <Bullet icon="ti-shield-check" text="Drivers are approved by your community admin" />
-          </div>
+        <div style={{ fontSize: 38, fontWeight: 500, color: 'white', lineHeight: 1.2, marginBottom: 14 }}>
+          Welcome. We&apos;re glad<br />you&apos;re here.
         </div>
-
-        <div style={{ position: 'relative', fontSize: 11, color: 'rgba(255,255,255,.45)' }}>
-          Grace Community Church · v1.0
+        <div style={{ fontSize: 14, color: 'rgba(255,255,255,.55)', lineHeight: 1.7, maxWidth: 400, margin: '0 auto 36px' }}>
+          CL Rides connects College Life members so nobody misses out on an event because of transportation. Find a seat — we&apos;ll get you there.
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <button
+            onClick={signInAsGuest}
+            style={{ padding: '14px 32px', background: 'white', color: '#26215C', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, boxShadow: '0 4px 20px rgba(0,0,0,.2)' }}
+          >
+            <i className="ti ti-search" style={{ fontSize: 17 }} />
+            First time at Lighthouse? Browse events &amp; find a ride
+          </button>
+        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', lineHeight: 1.7 }}>
+          First time? Browse events and find a ride as a guest — no account needed.
+          <br />
+          <button
+            onClick={() => openModal('register')}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.6)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0, marginTop: 4 }}
+          >
+            Register for an account to save your info
+          </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-        <div style={{ width: '100%', maxWidth: 380 }}>
-          <div style={{ fontSize: 11, letterSpacing: '.8px', color: 'var(--text-3)', textTransform: 'uppercase', marginBottom: 10 }}>
-            {step === 'email' ? 'Sign in' : 'Welcome'}
-          </div>
-          <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-.5px', marginBottom: 8 }}>
-            {step === 'email' ? 'Continue with email' : 'One more thing'}
-          </div>
-          <div style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 28 }}>
-            {step === 'email'
-              ? 'We’ll recognise approved drivers and admins automatically.'
-              : 'What should we call you?'}
-          </div>
+      {/* Events section */}
+      <div style={{ padding: '52px 40px 0' }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', letterSpacing: '.5px', marginBottom: 14, textAlign: 'center' }}>UPCOMING EVENTS</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, maxWidth: 680, margin: '0 auto' }}>
+          {EVENTS.map((ev) => (
+            <div key={ev.id} style={{ background: 'rgba(255,255,255,.07)', border: '0.5px solid rgba(255,255,255,.12)', borderRadius: 12, padding: 16 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: ev.color, marginBottom: 10 }} />
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'white', marginBottom: 6 }}>{ev.name}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.45)', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                <i className="ti ti-calendar" style={{ fontSize: 12 }} />
+                {ev.date} · {ev.time}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.45)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <i className="ti ti-map-pin" style={{ fontSize: 12 }} />
+                {ev.location}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-          {step === 'email' && (
-            <>
-              <Field label="Email">
-                <div style={{ position: 'relative' }}>
-                  <i className="ti ti-mail" style={{
-                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                    fontSize: 16, color: 'var(--text-3)',
-                  }} />
+      {/* Footer */}
+      <div style={{ padding: '36px 40px', textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,.2)', marginTop: 36, borderTop: '0.5px solid rgba(255,255,255,.07)' }}>
+        Lighthouse Bible Church · College Life · CL Rides v1.0
+      </div>
+
+      {/* Login / Register modal */}
+      {modalOpen && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+        >
+          <div style={{ background: 'white', borderRadius: 16, padding: 28, width: 340, boxShadow: '0 24px 64px rgba(0,0,0,.3)' }}>
+
+            {/* Modal header */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1726' }}>
+                {modalStep === 'signin' ? 'Welcome back' : 'Create an account'}
+              </div>
+              <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#aaa', lineHeight: 1, padding: 0 }}>
+                <i className="ti ti-x" />
+              </button>
+            </div>
+            <div style={{ fontSize: 12, color: '#52506A', marginBottom: 22, lineHeight: 1.55 }}>
+              {modalStep === 'signin'
+                ? 'Sign in to keep your rides and contact info saved.'
+                : 'Register to save your ride history and contact details.'}
+            </div>
+
+            {/* Name field (register only) */}
+            {modalStep === 'register' && (
+              <>
+                <div style={{ fontSize: 12, fontWeight: 500, color: '#52506A', marginBottom: 5 }}>Full name</div>
+                <div style={{ position: 'relative', marginBottom: 14 }}>
+                  <i className="ti ti-user" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: '#aaa', pointerEvents: 'none' }} />
                   <input
-                    type="email"
                     autoFocus
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                    onKeyDown={(e) => e.key === 'Enter' && check()}
-                    placeholder="you@grace.org"
-                    style={inputStyle({ padded: true })}
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); setError(''); }}
+                    style={{ width: '100%', padding: '9px 10px 9px 32px', border: '0.5px solid #D9D7CF', borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
-              </Field>
+              </>
+            )}
 
-              {error && <div style={{ fontSize: 12, color: 'var(--red-500)', marginTop: -12, marginBottom: 14 }}>{error}</div>}
+            {/* Email field */}
+            <div style={{ fontSize: 12, fontWeight: 500, color: '#52506A', marginBottom: 5 }}>Email address</div>
+            <div style={{ position: 'relative', marginBottom: 14 }}>
+              <i className="ti ti-mail" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: '#aaa', pointerEvents: 'none' }} />
+              <input
+                autoFocus={modalStep === 'signin'}
+                type="email"
+                placeholder="you@grace.org"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && (modalStep === 'signin' ? handleSignIn() : handleRegister())}
+                style={{ width: '100%', padding: '9px 10px 9px 32px', border: '0.5px solid #D9D7CF', borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
 
-              {lookup?.kind === 'approved' && (
-                <LookupHint kind={lookup.rec.role} text={`Recognised as ${lookup.rec.name} · ${lookup.rec.role === 'admin' ? 'Admin' : 'Approved driver'}`} />
+            {/* Password field */}
+            <div style={{ fontSize: 12, fontWeight: 500, color: '#52506A', marginBottom: 5 }}>Password</div>
+            <div style={{ position: 'relative', marginBottom: error ? 8 : 20 }}>
+              <i className="ti ti-lock" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: '#aaa', pointerEvents: 'none' }} />
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (modalStep === 'signin' ? handleSignIn() : handleRegister())}
+                style={{ width: '100%', padding: '9px 10px 9px 32px', border: '0.5px solid #D9D7CF', borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            {error && <div style={{ fontSize: 12, color: '#D85A30', marginBottom: 10 }}>{error}</div>}
+
+            {/* Primary action */}
+            <button
+              onClick={modalStep === 'signin' ? handleSignIn : handleRegister}
+              style={{ width: '100%', padding: 10, background: '#534AB7', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', marginBottom: 12 }}
+            >
+              {modalStep === 'signin' ? 'Sign in' : 'Create account'}
+              <i className="ti ti-arrow-right" style={{ fontSize: 12, verticalAlign: -1, marginLeft: 4 }} />
+            </button>
+
+            {/* Toggle between sign in / register */}
+            <div style={{ textAlign: 'center' }}>
+              {modalStep === 'signin' ? (
+                <button
+                  onClick={() => { setModalStep('register'); setError(''); setPassword(''); }}
+                  style={{ background: 'none', border: 'none', fontSize: 12, color: '#534AB7', cursor: 'pointer' }}
+                >
+                  Don&apos;t have an account? Register here
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setModalStep('signin'); setError(''); setName(''); }}
+                  style={{ background: 'none', border: 'none', fontSize: 12, color: '#534AB7', cursor: 'pointer' }}
+                >
+                  Already have an account? Sign in
+                </button>
               )}
-              {lookup?.kind === 'member' && (
-                <LookupHint kind="member" text={`Welcome back, ${lookup.rec.name}`} />
-              )}
-              {lookup?.kind === 'new' && email.includes('@') && (
-                <LookupHint kind="new" text="New here — we’ll create a rider account" />
-              )}
-
-              <button onClick={check} style={btnPrimary({ block: true, mt: 18 })}>
-                Continue <i className="ti ti-arrow-right" style={{ fontSize: 14, verticalAlign: -2, marginLeft: 4 }} />
-              </button>
-
-              <Divider label="or" />
-
-              <button onClick={signInAsGuest} style={btnGhost({ block: true })}>
-                <i className="ti ti-user" style={{ fontSize: 15, verticalAlign: -2, marginRight: 6 }} />
-                Continue as guest
-              </button>
-
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 18, lineHeight: 1.6 }}>
-                Guests can sign up for rides, but need to re-enter contact details each time. Drivers must be approved by an admin — <a style={{ color: 'var(--purple-600)', textDecoration: 'none' }} href="#">how to get approved</a>.
-              </div>
-            </>
-          )}
-
-          {step === 'name' && (
-            <>
-              <div style={{
-                background: 'var(--purple-100)', border: '0.5px solid var(--purple-200)',
-                borderRadius: 'var(--r-md)', padding: '10px 12px', marginBottom: 18,
-                fontSize: 12, color: 'var(--purple-700)',
-                display: 'flex', alignItems: 'center', gap: 8,
-              }}>
-                <i className="ti ti-sparkles" style={{ fontSize: 15 }} />
-                Creating a rider account for <span className="mono" style={{ fontWeight: 500 }}>{email.trim().toLowerCase()}</span>
-              </div>
-              <Field label="Your name">
-                <input
-                  autoFocus
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && name.trim() && signInWithEmail(email, name)}
-                  placeholder="e.g. Jake Lee"
-                  style={inputStyle()}
-                />
-              </Field>
-              <button
-                onClick={() => name.trim() && signInWithEmail(email, name)}
-                disabled={!name.trim()}
-                style={btnPrimary({ block: true, mt: 8, disabled: !name.trim() })}
-              >
-                Create rider account
-              </button>
-              <button onClick={() => { setStep('email'); setName(''); }} style={{ ...btnGhost({ block: true }), marginTop: 10 }}>
-                Back
-              </button>
-            </>
-          )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

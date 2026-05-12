@@ -1,11 +1,11 @@
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { StoreProvider } from "@/components/store";
 import { Toast } from "@/components/Toast";
 import { Tweaks } from "@/components/Tweaks";
 import { ModalOutlet } from "@/components/modals";
 
-const inter = Inter({
+const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -24,7 +24,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
       <body>
         <StoreProvider>
           {children}
